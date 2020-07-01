@@ -3,6 +3,7 @@ console.log('////////////// POKEAPI //////////////')
 var rs = require('readline-sync')
 var ax = require('axios')
 var fs = require('fs')
+var pokemons = []
 
 function menu(){
     var menuConteudo = rs.questionInt('MENU\n[1]Consultar Pokemon\n[2]Consultar Pokedex\n[3]Voltar ao menu\n[0]Sair\n')
@@ -16,11 +17,10 @@ function menu(){
         console.log('Obrigado por usar o PokeAPI!')
         console.log('/////////////////////////////////////')
     }else{
-        console.log('numero invalido')
+        console.log('Digite um numero valido.')
+        menu()
     }
 }
-
-menu()
 
 function consultaPokemon(){
     //entradas
@@ -30,7 +30,7 @@ function consultaPokemon(){
     // requisicao
     ax.get(pokemonURL)
         .then(function(response){
-            // map de tipos
+             // map de tipos
             var tipos = response.data.types.map(tipo=>{
                 return tipo.type.name
             })
@@ -39,22 +39,26 @@ function consultaPokemon(){
             var habilidades = response.data.abilities.map(habilidade=>{
                 return habilidade.ability.name
             })
-            
+
+            // add pokemon
             var pokeID = response.data.id
             var pokeNome = response.data.name
             var pokeTipos = tipos.join(' / ')
             var pokeHabilidades = habilidades.join(', ')
 
+            // resposta
             console.log('\nDados coletados. Aqui estao as informacoes do Pokemon buscado. ')
             console.log('ID do Pokemon: ', pokeID)
             console.log('Nome do Pokemon:', pokeNome)
             console.log('Tipo do Pokemon: ', pokeTipos)
             console.log('Habilidades do Pokemon: ', pokeHabilidades)
 
+            // salvar
             var novoPokemon = rs.keyInYNStrict(`Deseja salvar  ${pokeNome} na sua Pokedex?`)
             if(novoPokemon){
                 var pokedex = {pokeID, pokeNome, pokeTipos, pokeHabilidades}
-                var jsonSerializado = JSON.stringify(pokedex)
+                pokemons.push(pokedex)
+                var jsonSerializado = JSON.stringify(pokemons)
                 var caminhoDoArquivo = 'pokedex.json'
                 fs.writeFileSync(caminhoDoArquivo, jsonSerializado)
                 console.log(`O Pokemon ${pokeNome} foi salvo em sua Pokedex`)
@@ -70,7 +74,23 @@ function consultaPokemon(){
 }
 
 function consultaPokedex(){
+    if(pokemons){
+        console.log('sim')
+    }else{
+        console.log('nao')
+    }
     var jsonS = fs.readFileSync('pokedex.json')
-    var poke = JSON.parse(jsonS)
-    console.log(poke.pokeNome)
+    pokemons = JSON.parse(jsonS)
+
+    var pokedexPokemons = pokemons.map(pokedexPokemom=>{
+        return pokedexPokemom.pokeNome
+    })
+
+    console.log('POKEDEX:')
+    console.log(pokedexPokemons)
+    menu()
 }
+
+    
+
+menu()
